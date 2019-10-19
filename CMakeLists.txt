@@ -14,4 +14,4 @@ include_directories(./inc ${Boost_INCLUDE_DIRS})
 add_executable(mycat src/mycat.c inc/mycat.h)
 
 add_executable(myshell src/myshell.cpp inc/myshell.h)
-target_link_libraries(myshell ${Boost_LIBRARIES})
+target_link_libraries(myshell readline ${Boost_LIBRARIES})
