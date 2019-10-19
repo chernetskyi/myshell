@@ -12,5 +12,6 @@ find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
 include_directories(./inc ${Boost_INCLUDE_DIRS})
 
 add_executable(mycat src/mycat.c inc/mycat.h)
-add_executable(myshell src/myshell.cpp inc/myshell.h)
 
+add_executable(myshell src/myshell.cpp inc/myshell.h)
+target_link_libraries(myshell ${Boost_LIBRARIES})
