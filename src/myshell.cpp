@@ -14,7 +14,7 @@ int main(int argc, char *argv[], char *envp[]) {
         if ((strlen(buff) > 0) && !isspace(buff[0]))
             add_history(buff);
         std::cout << buff << std::endl;
-        delete buff;
+        free(buff);
     }
     _exit(0);
 }
