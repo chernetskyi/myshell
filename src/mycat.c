@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
     int *opened_files = (int *) malloc(sizeof(int) * passed_files);
     if (opened_files == NULL) {
         error(malloc_error);
-        _exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 #else
     FILE **opened_files_stdlib = (FILE **) malloc(sizeof(FILE *) * passed_files);
     if (opened_files_stdlib == NULL) {
         error(malloc_error);
-        _exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
 #endif
     size_t j = 0;
@@ -50,14 +50,14 @@ int main(int argc, char *argv[]) {
                 for (size_t k = 0; k < j; k++)
                     close(opened_files[k]);
                 free(opened_files);
-                _exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
             opened_files[j++] = fd;
 #else
             FILE *f;
             if ((f = fopen(argv[i], "r")) == NULL) {
                 fwrite(open_error, sizeof(char), strlen(open_error), stderr);
-                _exit(EXIT_FAILURE);
+                exit(EXIT_FAILURE);
             }
             opened_files_stdlib[j++] = f;
 #endif
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
         close(opened_files[i]);
         if (err_cd) {
             free(opened_files);
-            _exit(EXIT_FAILURE);
+            exit(EXIT_FAILURE);
         }
     }
     free(opened_files);
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     }
     free(opened_files_stdlib);
 #endif
-    _exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }
 
 void error(const char *err) {
@@ -99,7 +99,7 @@ void display_help_message() {
 #else
     fwrite(help_message, sizeof(char), strlen(help_message), stdout);
 #endif
-    _exit(0);
+    exit(0);
 }
 
 #ifndef EXTRA_POINTS
