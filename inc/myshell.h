@@ -7,6 +7,7 @@
 #include <cctype>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <map>
 
 std::string normalize_input(char *input);
@@ -16,6 +17,7 @@ private:
     int erno = 0;
     char *buff = nullptr;
     const char *prompt = "# ";
+    std::string current_dir = "/";
     char **envp;
 
     std::map<std::string, builtin> builtins_map;

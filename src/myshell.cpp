@@ -61,6 +61,8 @@ builtin MyShell::builtins(const std::string &command) {
 void MyShell::initialize_builtins() {
     builtins_map["mexit"] = &mexit;
     builtins_map["merrno"] = [this](int argc, char **argv, char **envp) { return merrno(argc, argv, envp, erno); };
+    builtins_map["mpwd"] = [this](int argc, char **argv, char **envp) { return mpwd(argc, argv, envp, &current_dir); };
+    builtins_map["mcd"] = [this](int argc, char **argv, char **envp) { return mcd(argc, argv, envp, &current_dir); };
 }
 
 
