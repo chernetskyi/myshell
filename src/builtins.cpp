@@ -1,3 +1,5 @@
+
+#include "myshell.h"
 #include <iostream>
 #include <map>
 #include <string>
@@ -8,13 +10,6 @@
 
 namespace po = boost::program_options;
 
-builtin builtins(const std::string &command, const int &errn) {
-    //TODO: rewrite this function to avoid initializing map on every call
-    std::map<std::string, builtin> builtins;
-    builtins["mexit"] = &mexit;
-    builtins["merrno"] = [&errn](int argc, char **argv, char **envp) { return merrno(argc, argv, envp, errn); };
-    return builtins.find(command) != builtins.end() ? builtins[command] : nullptr;
-}
 
 int mexit(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
@@ -36,6 +31,20 @@ int mexit(int argc, char *argv[], char *envp[]) {
         return 0;
     } else
         exit(vm["status-code"].as<int>());
+}
+
+int mpwd(int argc, char *argv[], char *envp[], std::string *current_dir) {
+    //TODO implement mpwd
+    std::cout << *current_dir << std::endl;
+    return 0;
+}
+
+int mcd(int argc, char *argv[], char *envp[], std::string *current_dir) {
+    //TODO implement mcd
+
+    current_dir->append(argv[1]);
+    current_dir->append("/");
+    return 0;
 }
 
 int merrno(int argc, char *argv[], char *envp[], const int &errn) {
