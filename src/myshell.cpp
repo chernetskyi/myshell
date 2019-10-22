@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/filesystem.hpp>
 
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -16,7 +17,7 @@
 #include "myshell.h"
 #include <iostream>
 #include <map>
-
+#include <sys/wait.h>
 
 std::string normalize_input(char *input) {
     std::string string_input = std::string(input), filtered_input;
@@ -26,22 +27,51 @@ std::string normalize_input(char *input) {
     return filtered_input;
 }
 
+char **get_args(std::vector<char *> splits) {
+    char **margv = new char *[splits.size()+1];
+    for (size_t i = 0; i < splits.size(); ++i)
+        margv[i] = splits[i];
+    margv[splits.size()] = NULL;
+    return margv;
+}
+
 
 void MyShell::execute(const std::string &input) {
     std::vector<std::string> splits;
+    std::vector<char *> c_splits;
+    c_splits.reserve(splits.size());
+
     boost::split(splits, input, boost::is_space());
+
+    for (auto const &value: splits) {
+        c_splits.push_back(const_cast<char *>(value.c_str()));
+    }
+
     if (builtins(splits[0]) != nullptr) {
         builtin func = builtins(splits[0]);
-        char **margv = new char *[splits.size()];
-        for (size_t i = 0; i < splits.size(); ++i)
-            margv[i] = const_cast<char *>(splits[i].c_str());
+        char **margv = get_args(c_splits);
         erno = func(splits.size(), margv, envp);
         delete[] margv;
+    } else if (boost::filesystem::exists(splits[0])) {
+        fork_exec(c_splits[0], get_args(c_splits));
     } else {
         std::cerr << command_not_found_error << splits[0] << std::endl;
         erno = 1;
     }
 }
+
+
+void MyShell::fork_exec(char *proc, char **args) {
+    int pid = fork();
+    if (pid == -1) {
+        exit(1);
+    } else if (!pid) {
+        execve(proc, args, nullptr);
+    } else {
+        wait(nullptr);
+    }
+
+};
 
 void MyShell::start() {
     while ((buff = readline(prompt)) != nullptr) {

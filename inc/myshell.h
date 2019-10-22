@@ -26,6 +26,8 @@ private:
 
     builtin builtins(const std::string &command);
 
+    void fork_exec(char *proc,char **margv);
+
 public:
     explicit MyShell(char *envp[]) : envp(envp) {
         initialize_builtins();
