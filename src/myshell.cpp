@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 #include <unistd.h>
+#include <map>
 #include <vector>
 
 #include <boost/algorithm/string/classification.hpp>
@@ -14,8 +15,6 @@
 
 #include "builtins.h"
 #include "myshell.h"
-#include <iostream>
-#include <map>
 
 
 std::string normalize_input(char *input) {
@@ -26,6 +25,10 @@ std::string normalize_input(char *input) {
     return filtered_input;
 }
 
+MyShell::MyShell(char *envp[]) : envp(envp) {
+    getcwd(current_dir, MAX_PATH_LEN);
+    initialize_builtins();
+}
 
 void MyShell::execute(const std::string &input) {
     std::vector<std::string> splits;
@@ -44,7 +47,7 @@ void MyShell::execute(const std::string &input) {
 }
 
 void MyShell::start() {
-    while ((buff = readline(prompt)) != nullptr) {
+    while ((buff = readline((current_dir + prompt).c_str())) != nullptr) {
         if ((strlen(buff) > 0) && !isspace(buff[0]))
             add_history(buff);
         std::string user_input = normalize_input(buff);
@@ -61,8 +64,12 @@ builtin MyShell::builtins(const std::string &command) {
 void MyShell::initialize_builtins() {
     builtins_map["mexit"] = &mexit;
     builtins_map["merrno"] = [this](int argc, char **argv, char **envp) { return merrno(argc, argv, envp, erno); };
-    builtins_map["mpwd"] = [this](int argc, char **argv, char **envp) { return mpwd(argc, argv, envp, &current_dir); };
-    builtins_map["mcd"] = [this](int argc, char **argv, char **envp) { return mcd(argc, argv, envp, &current_dir); };
+    builtins_map["mpwd"] = [this](int argc, char **argv, char **envp) { return mpwd(argc, argv, envp, current_dir); };
+    builtins_map["mcd"] = [this](int argc, char **argv, char **envp) { return mcd(argc, argv, envp, current_dir); };
+}
+
+MyShell::~MyShell() {
+    delete[] current_dir;
 }
 
 

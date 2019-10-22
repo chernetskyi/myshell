@@ -1,11 +1,10 @@
-
-#include "myshell.h"
 #include <iostream>
 #include <map>
 #include <string>
 
 #include <boost/program_options.hpp>
 
+#include "myshell.h"
 #include "builtins.h"
 
 namespace po = boost::program_options;
@@ -33,17 +32,48 @@ int mexit(int argc, char *argv[], char *envp[]) {
         exit(vm["status-code"].as<int>());
 }
 
-int mpwd(int argc, char *argv[], char *envp[], std::string *current_dir) {
-    //TODO implement mpwd
-    std::cout << *current_dir << std::endl;
+int mpwd(int argc, char *argv[], char *envp[], char *current_dir) {
+    //TODO: use boost::filesystem instead of C-interface
+    po::options_description options("Options");
+    options.add_options()
+            ("help,h", "print help message");
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, options), vm);
+
+    if (vm.count("help"))
+        std::cout << mpwd_help_message << std::endl;
+    else
+        std::cout << current_dir << std::endl;
     return 0;
 }
 
-int mcd(int argc, char *argv[], char *envp[], std::string *current_dir) {
+int mcd(int argc, char *argv[], char *envp[], char *current_dir) {
+    //TODO: use boost::filesystem instead of C-interface
     //TODO implement mcd
+    if (argc == 1) return 0;
+    po::options_description options("Options");
+    options.add_options()
+            ("help,h", "print help message");
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, options), vm);
 
-    current_dir->append(argv[1]);
-    current_dir->append("/");
+    if (vm.count("help")) {
+        std::cout << mcd_help_message << std::endl;
+        return 0;
+    }
+
+    if (strcmp(argv[1], "~") == 0)
+        //TODO: add env variable for home directory and then implement functionality for changing to home
+        std::cout << "changed to home" << std::endl;
+    else {
+        char *path = realpath(argv[1], nullptr);
+        int ret_code = chdir(path);
+        if (ret_code < 0) {
+            std::cout << mcd_error_message << argv[1] << std::endl;
+            return ret_code;
+        }
+        getcwd(current_dir, MAX_PATH_LEN);
+    }
     return 0;
 }
 
