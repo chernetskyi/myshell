@@ -15,14 +15,14 @@
 
 #define MAX_PATH_LEN 4096
 
-std::string normalize_input(char *input);
 
 class MyShell {
 private:
     int erno = 0;
-    char *buff = nullptr;
+
     std::string prompt = " # ";
     char *current_dir = new char[MAX_PATH_LEN];
+
     char **envp;
 
     std::map<std::string, builtin> builtins_map;
@@ -30,6 +30,8 @@ private:
     void initialize_builtins();
 
     builtin builtins(const std::string &command);
+
+    void fork_exec(char *proc,char **margv);
 
 public:
     explicit MyShell(char *envp[]);
@@ -41,7 +43,9 @@ public:
     ~MyShell();
 };
 
-constexpr const char command_not_found_error[] = "myshell: command not found: ";
+constexpr const char command_not_found_error[] = "myshell: commnad not found: ";
+constexpr const char could_not_create_process_error[] = "myshell: could not create process: ";
+
 
 
 #endif //MYSHELL_MYSHELL_H
