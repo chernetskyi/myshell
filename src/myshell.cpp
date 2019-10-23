@@ -80,6 +80,7 @@ void MyShell::initialize_builtins() {
     builtins_map["merrno"] = [this](int argc, char **argv, char **envp) { return merrno(argc, argv, envp, erno); };
     builtins_map["mpwd"] = &mpwd;
     builtins_map["mcd"] = &mcd;
+    builtins_map["mecho"] = &mecho;
 }
 
 void MyShell::start() {

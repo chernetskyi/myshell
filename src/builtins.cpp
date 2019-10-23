@@ -83,3 +83,10 @@ int merrno(int argc, char *argv[], char *envp[], const int &errn) {
             return 1;
     }
 }
+
+int mecho(int argc, char *argv[], char *envp[]) {
+    for (size_t i = 1; i < argc; ++i)
+        std::cout << argv[i] << ' ';
+    std::cout << std::endl;
+    return 0;
+}

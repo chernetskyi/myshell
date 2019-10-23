@@ -30,4 +30,6 @@ constexpr const char merrno_help_message[] = "merrno: merrno\n"
                                              "    Print the return value of the last command.";
 constexpr const char merrno_too_many_args_error_message[] = "merrno: too many arguments";
 
+int mecho(int argc, char *argv[], char *envp[]);
+
 #endif //MYSHELL_BUILTINS_H
