@@ -22,7 +22,6 @@ MyShell::MyShell(char *envp[]) : erno(0) {
         i++;
     }
     env.push_back(nullptr);
-    export_env = env;
     initialize_builtins();
 }
 
@@ -31,7 +30,7 @@ void MyShell::execute(std::string &input) {
     process(input, args);
     if (builtins_map.find(args[0]) != builtins_map.end()) {
         builtin func = builtins_map[args[0]];
-        erno = func(args.size(), args.data(), export_env.data());
+        erno = func(args.size(), args.data(), env.data());
     } else
         fork_exec(args[0], args.data());
 }
@@ -65,7 +64,7 @@ void MyShell::fork_exec(char *proc, char **args) {
         std::cerr << could_not_create_process_error << proc << std::endl;
         erno = 1;
     } else if (!pid) {
-        int res = execvpe(proc, args, export_env.data());
+        int res = execvpe(proc, args, env.data());
         if (res == -1) {
             std::cerr << command_not_found_error << proc << std::endl;
             erno = 1;
@@ -75,13 +74,12 @@ void MyShell::fork_exec(char *proc, char **args) {
 }
 
 std::string MyShell::prompt() {
-    std::string PS1 = "\n\e[1;34m%D\e[m\n>>> ";
-    std::string prompt = PS1;
+    std::string prompt(getenv("PS1"));
     size_t start_pos = 0;
-    if ((start_pos = PS1.find("%D")) != std::string::npos) {
-        auto workind_dir = boost::filesystem::current_path();
-        prompt.insert(start_pos, workind_dir.string());
-        prompt.erase(start_pos + workind_dir.size(), 2);
+    if ((start_pos = prompt.find("%D")) != std::string::npos) {
+        auto working_dir = boost::filesystem::current_path();
+        prompt.insert(start_pos, working_dir.string());
+        prompt.erase(start_pos + working_dir.size(), 2);
     }
     return prompt;
 }
@@ -95,6 +93,7 @@ void MyShell::initialize_builtins() {
 }
 
 void MyShell::start() {
+    setenv("PS1", "\n\e[1;34m%D\e[m\n>>> ", 1);
     char *input_buff = nullptr;
     while ((input_buff = readline(prompt().c_str())) != nullptr) {
         if (strlen(input_buff) == 0)

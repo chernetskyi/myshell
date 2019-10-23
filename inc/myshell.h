@@ -11,7 +11,6 @@ class MyShell {
 private:
     int erno;
     std::vector<char *> env;
-    std::vector<char *> export_env;
     std::map<std::string, builtin> builtins_map;
 
     void initialize_builtins();
