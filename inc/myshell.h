@@ -38,6 +38,7 @@ public:
 };
 
 constexpr const char command_not_found_error[] = "myshell: commnad not found: ";
+constexpr const char could_not_create_process_error[] = "myshell: could not create process: ";
 
 
 #endif //MYSHELL_MYSHELL_H

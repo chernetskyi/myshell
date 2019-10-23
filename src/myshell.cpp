@@ -20,30 +20,35 @@
 #include "helpers.h"
 
 
-
 void MyShell::execute(const std::string &input) {
     std::vector<std::string> splits;
     std::vector<char *> c_splits;
-    c_splits.reserve(splits.size());
+    std::string process;
+    char **margv;
 
     boost::split(splits, input, boost::is_space());
+    c_splits.reserve(splits.size());
+
     preprocess_line(splits, c_splits);
 
-    if (builtins(splits[0]) != nullptr) {
-        builtin func = builtins(splits[0]);
-        char **margv = get_args(c_splits);
+    margv = get_args(c_splits);
+    process = splits[0];
+
+    if (builtins(process) != nullptr) {
+        builtin func = builtins(process);
         erno = func(splits.size(), margv, envp);
-        delete[] margv;
     } else {
-        fork_exec(c_splits[0], get_args(c_splits));
+        fork_exec(c_splits[0], margv);
     }
+    delete[] margv;
 }
 
 
 void MyShell::fork_exec(char *proc, char **args) {
     int pid = fork();
     if (pid == -1) {
-        exit(1);
+        std::cerr << could_not_create_process_error << proc << std::endl;
+        erno = 1;
     } else if (!pid) {
         int res = execvp(proc, args);
         if (res == -1) {
@@ -51,7 +56,7 @@ void MyShell::fork_exec(char *proc, char **args) {
             erno = 1;
         }
     } else {
-        wait(nullptr);
+        waitpid(pid, nullptr, 0);
     }
 
 };
