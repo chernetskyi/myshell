@@ -64,7 +64,7 @@ void MyShell::fork_exec(char *proc, char **args) {
 }
 
 std::string MyShell::prompt() {
-    std::string PS1 = "%D # ";
+    std::string PS1 = "\n%D\n>>> ";
     std::string prompt = PS1;
     size_t start_pos = 0;
     if ((start_pos = PS1.find("%D")) != std::string::npos) {
@@ -85,7 +85,9 @@ void MyShell::initialize_builtins() {
 void MyShell::start() {
     char *input_buff = nullptr;
     while ((input_buff = readline(prompt().c_str())) != nullptr) {
-        if ((strlen(input_buff) > 0) && !isspace(input_buff[0]))
+        if (strlen(input_buff) == 0)
+            continue;
+        else if ((strlen(input_buff) > 0) && !isspace(input_buff[0]))
             add_history(input_buff);
         std::string user_input = input_buff;
         free(input_buff);
