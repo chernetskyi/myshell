@@ -10,10 +10,10 @@ constexpr const char mexit_help_message[] = "exit: exit [n]"
                                             "    Exit the shell.\n"
                                             "    Exits the shell with a status of N. If N is omitted, the exit status is that of the last command executed.";
 
-int mpwd(int argc, char *argv[], char *envp[], char *current_dir);
+int mpwd(int argc, char *argv[], char *envp[]);
 constexpr const char mpwd_help_message[] = "mpwd: print working directory";
 
-int mcd(int argc, char *argv[], char *envp[], char *current_dir);
+int mcd(int argc, char *argv[], char *envp[]);
 constexpr const char mcd_help_message[] = "mcd: change directory";
 constexpr const char mcd_error_message[] = "mcd: no such file or directory: ";
 

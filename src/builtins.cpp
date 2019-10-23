@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
-#include "myshell.h"
 #include "builtins.h"
 
 namespace po = boost::program_options;
@@ -30,8 +30,7 @@ int mexit(int argc, char *argv[], char *envp[]) {
         exit(vm["status-code"].as<int>());
 }
 
-int mpwd(int argc, char *argv[], char *envp[], char *current_dir) {
-    //TODO: use boost::filesystem instead of C-interface
+int mpwd(int argc, char *argv[], char *envp[]) {
     po::options_description options("Options");
     options.add_options()
             ("help,h", "print help message");
@@ -41,37 +40,29 @@ int mpwd(int argc, char *argv[], char *envp[], char *current_dir) {
     if (vm.count("help"))
         std::cout << mpwd_help_message << std::endl;
     else
-        std::cout << current_dir << std::endl;
+        std::cout << boost::filesystem::current_path().string() << std::endl;
     return 0;
 }
 
-int mcd(int argc, char *argv[], char *envp[], char *current_dir) {
-    //TODO: use boost::filesystem instead of C-interface
-    //TODO implement mcd
-    if (argc == 1) return 0;
-    po::options_description options("Options");
-    options.add_options()
+int mcd(int argc, char *argv[], char *envp[]) {
+    po::options_description basic_options("Options");
+    basic_options.add_options()
             ("help,h", "print help message");
+    po::options_description hidden_options("Hidden options");
+    hidden_options.add_options()
+            ("path", po::value<std::string>()->default_value("~"), "path to new directory");
+    po::options_description options;
+    options.add(basic_options).add(hidden_options);
+    po::positional_options_description positional;
+    positional.add("path", 1);
     po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, options), vm);
+    auto parsed = po::command_line_parser(argc, argv).options(options).positional(positional).run();
+    po::store(parsed, vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help"))
         std::cout << mcd_help_message << std::endl;
-        return 0;
-    }
-
-    if (strcmp(argv[1], "~") == 0)
-        //TODO: add env variable for home directory and then implement functionality for changing to home
-        std::cout << "changed to home" << std::endl;
-    else {
-        char *path = realpath(argv[1], nullptr);
-        int ret_code = chdir(path);
-        if (ret_code < 0) {
-            std::cout << mcd_error_message << argv[1] << std::endl;
-            return ret_code;
-        }
-        getcwd(current_dir, MAX_PATH_LEN);
-    }
+    else
+        boost::filesystem::current_path(vm["path"].as<std::string>());
     return 0;
 }
 
