@@ -28,7 +28,16 @@ MyShell::MyShell(char *envp[]) : erno(0) {
 void MyShell::execute(std::string &input) {
     std::vector<char *> args;
     process(input, args);
-    if (builtins_map.find(args[0]) != builtins_map.end()) {
+    if (std::string(args[0]).find('=') != std::string::npos)
+        if (args.size() == 1) {
+            std::vector<std::string> splits;
+            boost::split(splits, std::string(args[0]), boost::is_any_of("="));
+            setenv(splits[0].c_str(), splits[1].c_str(), 1);
+        } else {
+            std::cerr << command_not_found_error << args[1] << std::endl;
+            erno = 1;
+        }
+    else if (builtins_map.find(args[0]) != builtins_map.end()) {
         builtin func = builtins_map[args[0]];
         erno = func(args.size(), args.data(), env.data());
     } else
