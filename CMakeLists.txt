@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Boost REQUIRED COMPONENTS system filesystem program_options)
+find_package(Boost REQUIRED COMPONENTS system filesystem)
 include_directories(./inc ${Boost_INCLUDE_DIRS})
 
 add_executable(mycat src/mycat.c inc/mycat.h)

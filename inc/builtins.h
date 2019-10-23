@@ -6,19 +6,28 @@
 typedef std::function<int(int, char **, char **)> builtin;
 
 int mexit(int argc, char *argv[], char *envp[]);
-constexpr const char mexit_help_message[] = "exit: exit [n]"
+constexpr const char mexit_help_message[] = "mexit: mexit [n]\n"
                                             "    Exit the shell.\n"
                                             "    Exits the shell with a status of N. If N is omitted, the exit status is that of the last command executed.";
+constexpr const char mexit_too_many_args_error_message[] = "mexit: too many arguments";
+constexpr const char mexit_not_numeric_error_message[] = "mexit: numeric argument required";
 
 int mpwd(int argc, char *argv[], char *envp[]);
-constexpr const char mpwd_help_message[] = "mpwd: print working directory";
+constexpr const char mpwd_help_message[] = "mpwd: mpwd\n"
+                                           "    Print full filename of current working directory.";
+constexpr const char mpwd_too_many_args_error_message[] = "mpwd: too many arguments";
 
 int mcd(int argc, char *argv[], char *envp[]);
-constexpr const char mcd_help_message[] = "mcd: change directory";
-constexpr const char mcd_error_message[] = "mcd: no such file or directory: ";
+constexpr const char mcd_help_message[] = "mcd: mcd <dir>\n"
+                                          "    Change the working directory.";
+constexpr const char mcd_not_enough_args_error_message[] = "mcd: not enough arguments";
+constexpr const char mcd_no_such_dir_error_message[] = "mcd: no such file or directory: ";
+constexpr const char mcd_too_many_args_error_message[] = "mcd: too many arguments";
 
 
 int merrno(int argc, char *argv[], char *envp[], const int &errn);
-constexpr const char merrno_help_message[] = "merrno: print the return code of the last command";
+constexpr const char merrno_help_message[] = "merrno: merrno\n"
+                                             "    Print the return value of the last command.";
+constexpr const char merrno_too_many_args_error_message[] = "merrno: too many arguments";
 
 #endif //MYSHELL_BUILTINS_H
