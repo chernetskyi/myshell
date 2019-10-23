@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <cctype>
 #include <iostream>
 #include <string>
@@ -7,6 +6,8 @@
 #include <vector>
 #include <map>
 
+#include <sys/wait.h>
+
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
@@ -14,13 +15,8 @@
 #include <readline/history.h>
 
 #include "builtins.h"
-#include "myshell.h"
-
-#include <sys/wait.h>
-
-#include "builtins.h"
-#include "myshell.h"
 #include "helpers.h"
+#include "myshell.h"
 
 MyShell::MyShell(char *envp[]) : envp(envp) {
     getcwd(current_dir, MAX_PATH_LEN);
@@ -97,7 +93,6 @@ MyShell::~MyShell() {
 
 
 int main(int argc, char *argv[], char *envp[]) {
-
     MyShell shell = MyShell(envp);
     shell.start();
     exit(0);

@@ -2,14 +2,8 @@
 #define MYSHELL_MYSHELL_H
 
 #include <string>
-#include <algorithm>
-#include <cctype>
-#include <iostream>
-#include <vector>
 #include <string>
 #include <map>
-#include <unistd.h>
-#include <limits>
 
 #include "builtins.h"
 
@@ -31,7 +25,7 @@ private:
 
     builtin builtins(const std::string &command);
 
-    void fork_exec(char *proc,char **margv);
+    void fork_exec(char *proc, char **margv);
 
 public:
     explicit MyShell(char *envp[]);
@@ -45,7 +39,5 @@ public:
 
 constexpr const char command_not_found_error[] = "myshell: commnad not found: ";
 constexpr const char could_not_create_process_error[] = "myshell: could not create process: ";
-
-
 
 #endif //MYSHELL_MYSHELL_H

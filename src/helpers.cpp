@@ -1,20 +1,11 @@
-#include "helpers.h"
-
-
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/filesystem.hpp>
-
-
-#include <string>
 #include <algorithm>
 #include <cctype>
-#include <iostream>
-#include <vector>
 #include <string>
-#include <map>
+#include <vector>
 
+#include <boost/algorithm/string/trim.hpp>
+
+#include "helpers.h"
 
 std::string normalize_input(char *input) {
     std::string string_input = std::string(input), filtered_input;
@@ -34,18 +25,13 @@ char **get_args(std::vector<char *> splits) {
 
 
 void preprocess_line(std::vector<std::string> &from, std::vector<char *> &to) {
-
-    for (auto &value: from) {
-
+    for (auto &value: from)
         if (value[0] == '$') {
             value.erase(0, 1);
             char *val = getenv(value.c_str());
             to.push_back(val);
-        } else {
+        } else
             to.push_back(const_cast<char *>(value.c_str()));
-        }
-    }
-
 }
 
 
