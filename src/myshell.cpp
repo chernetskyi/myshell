@@ -4,36 +4,21 @@
 #include <string>
 #include <unistd.h>
 #include <vector>
+#include <map>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/filesystem.hpp>
 
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "builtins.h"
-#include "myshell.h"
-#include <iostream>
-#include <map>
+
 #include <sys/wait.h>
 
-std::string normalize_input(char *input) {
-    std::string string_input = std::string(input), filtered_input;
-    boost::trim(string_input);
-    std::unique_copy(string_input.begin(), string_input.end(), std::back_insert_iterator<std::string>(filtered_input),
-                     [](char a, char b) { return isspace(a) && isspace(b); });
-    return filtered_input;
-}
+#include "builtins.h"
+#include "myshell.h"
+#include "helpers.h"
 
-char **get_args(std::vector<char *> splits) {
-    char **margv = new char *[splits.size()+1];
-    for (size_t i = 0; i < splits.size(); ++i)
-        margv[i] = splits[i];
-    margv[splits.size()] = NULL;
-    return margv;
-}
 
 
 void MyShell::execute(const std::string &input) {
@@ -42,21 +27,15 @@ void MyShell::execute(const std::string &input) {
     c_splits.reserve(splits.size());
 
     boost::split(splits, input, boost::is_space());
-
-    for (auto const &value: splits) {
-        c_splits.push_back(const_cast<char *>(value.c_str()));
-    }
+    preprocess_line(splits, c_splits);
 
     if (builtins(splits[0]) != nullptr) {
         builtin func = builtins(splits[0]);
         char **margv = get_args(c_splits);
         erno = func(splits.size(), margv, envp);
         delete[] margv;
-    } else if (boost::filesystem::exists(splits[0])) {
-        fork_exec(c_splits[0], get_args(c_splits));
     } else {
-        std::cerr << command_not_found_error << splits[0] << std::endl;
-        erno = 1;
+        fork_exec(c_splits[0], get_args(c_splits));
     }
 }
 
@@ -66,7 +45,11 @@ void MyShell::fork_exec(char *proc, char **args) {
     if (pid == -1) {
         exit(1);
     } else if (!pid) {
-        execve(proc, args, nullptr);
+        int res = execvp(proc, args);
+        if (res == -1) {
+            std::cerr << command_not_found_error << proc << std::endl;
+            erno = 1;
+        }
     } else {
         wait(nullptr);
     }
@@ -74,6 +57,7 @@ void MyShell::fork_exec(char *proc, char **args) {
 };
 
 void MyShell::start() {
+    char *buff = nullptr;
     while ((buff = readline(prompt)) != nullptr) {
         if ((strlen(buff) > 0) && !isspace(buff[0]))
             add_history(buff);
