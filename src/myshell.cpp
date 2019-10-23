@@ -23,6 +23,7 @@ MyShell::MyShell(char *envp[]) : erno(0) {
         env.push_back(envp[i]);
         i++;
     }
+    env.push_back(nullptr);
     export_env = env;
     initialize_builtins();
 }
