@@ -32,5 +32,8 @@ public:
 
 constexpr const char command_not_found_error[] = "myshell: command not found: ";
 constexpr const char could_not_create_process_error[] = "myshell: could not create process: ";
+constexpr const char quotes_ignored_error[] = "myshell: quotes ignored because of the odd amount";
+
+void put_args(const std::string &input, std::vector<char *> &args);
 
 #endif //MYSHELL_MYSHELL_H

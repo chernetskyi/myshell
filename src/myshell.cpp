@@ -6,9 +6,7 @@
 #include <vector>
 #include <sys/wait.h>
 
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 #include <readline/readline.h>
@@ -39,14 +37,26 @@ void MyShell::execute(std::string &input) {
 }
 
 void MyShell::process(std::string &input, std::vector<char *> &args) {
-    std::string string_input = std::string(input), filtered_input;
-    boost::trim(string_input);
-    std::unique_copy(string_input.begin(), string_input.end(), std::back_insert_iterator<std::string>(filtered_input),
-                     [](char a, char b) { return isspace(a) && isspace(b); });
-    std::vector<std::string> splits;
-    boost::split(splits, filtered_input, boost::is_space());
-    for (auto &split : splits)
-        args.push_back(const_cast<char *>(split.c_str()));
+    boost::trim(input);
+    size_t n = std::count(input.begin(), input.end(), '"');
+    if ((n > 0) && (n % 2 == 0)) {
+        std::vector<std::string> splits;
+        boost::split(splits, input, boost::is_any_of("\""));
+        for (size_t i = 0; i < splits.size(); ++i)
+            if (i % 2 == 0) {
+                boost::trim(splits[i]);
+                put_args(splits[i], args);
+            } else
+                args.push_back(const_cast<char *>(splits[i].c_str()));
+    } else {
+        if (n > 0) {
+            std::cerr << quotes_ignored_error << std::endl;
+            boost::erase_all(input, "\"");
+        }
+        put_args(input, args);
+    }
+    for (auto &arg : args)
+        std::cout << arg << std::endl;
 }
 
 void MyShell::fork_exec(char *proc, char **args) {
@@ -55,7 +65,7 @@ void MyShell::fork_exec(char *proc, char **args) {
         std::cerr << could_not_create_process_error << proc << std::endl;
         erno = 1;
     } else if (!pid) {
-        int res = execve(proc, args, export_env.data());
+        int res = execvpe(proc, args, export_env.data());
         if (res == -1) {
             std::cerr << command_not_found_error << proc << std::endl;
             erno = 1;
@@ -65,7 +75,7 @@ void MyShell::fork_exec(char *proc, char **args) {
 }
 
 std::string MyShell::prompt() {
-    std::string PS1 = "\n%D\n>>> ";
+    std::string PS1 = "\n\e[1;34m%D\e[m\n>>> ";
     std::string prompt = PS1;
     size_t start_pos = 0;
     if ((start_pos = PS1.find("%D")) != std::string::npos) {
@@ -95,6 +105,16 @@ void MyShell::start() {
         free(input_buff);
         execute(user_input);
     }
+}
+
+void put_args(const std::string &input, std::vector<char *> &args) {
+    std::string filtered_input;
+    std::unique_copy(input.begin(), input.end(), std::back_insert_iterator<std::string>(filtered_input),
+                     [](char a, char b) { return isspace(a) && isspace(b); });
+    std::vector<std::string> splits;
+    boost::split(splits, filtered_input, boost::is_space());
+    for (auto &split : splits)
+        args.push_back(const_cast<char *>(split.c_str()));
 }
 
 int main(int argc, char *argv[], char *envp[]) {
