@@ -15,6 +15,11 @@ typedef struct {
     bool recursive;
 } options_struct;
 
-void parse_sorting_option(options_struct options, std::vector<std::string> value);
+void parse_sorting_option(options_struct &options, std::vector<std::string> value);
+
+void error(int ec, std::string msg);
+
+constexpr char invalid_option_error[] = "myls: invalid option -- ";
+constexpr char try_help_message[] = "Try 'myls --help' for more information.";
 
 #endif //MYSHELL_MYLS_H
