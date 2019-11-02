@@ -61,9 +61,10 @@ std::string format_file(directory_entry &file, options_struct &flags) {
     //working with flags
     if (flags.indicate) filename = f_flag(filename, stat_buff);
     else if (flags.long_listing) filename = l_flag(filename, stat_buff);
+    else filename += "\t";
+
 
     return filename;
-
 }
 
 void list_dirs(options_struct &opts) {
@@ -71,7 +72,10 @@ void list_dirs(options_struct &opts) {
         path p(directory);
         std::vector<directory_entry> files;
         if (is_directory(p)) {
-            copy(directory_iterator(p), directory_iterator(), back_inserter(files));
+            if (opts.recursive)
+                copy(recursive_directory_iterator(p), recursive_directory_iterator(), back_inserter(files));
+            else
+                copy(directory_iterator(p), directory_iterator(), back_inserter(files));
             std::cout << p.stem() << ":" << std::endl;
             for (auto &file :  files) std::cout << format_file(file, opts);
             std::cout << std::endl;
@@ -82,8 +86,9 @@ void list_dirs(options_struct &opts) {
 
 int main(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
-    basic_options.add_options()
 
+    //TODO fix this s** only forks with --arg, must be -arg
+    basic_options.add_options()
             ("help,h", "print help message")
             ("l", "use a long listing format")
             ("r", "reverse order while sorting")
