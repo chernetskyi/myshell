@@ -11,14 +11,29 @@ namespace po = boost::program_options;
 using namespace boost::filesystem;
 
 
-void list_dirs(std::vector<std::string> files) {
-    for (auto &file : files) {
-        path p(file);
+std::string trailing_slesh(std::string file) {
+    return is_directory(file) ? "/" + file : file;
+}
+
+void print_file(directory_entry &file) {
+    std::string filename = file.path().filename().string();
+    std::cout << trailing_slesh(filename) << "\t";
+
+}
+
+void list_dirs(options_struct &opts) {
+    for (auto &directory : opts.files) {
+        path p(directory);
         std::vector<directory_entry> v;
         if (is_directory(p)) {
             copy(directory_iterator(p), directory_iterator(), back_inserter(v));
-            for (auto &it : v) std::cout << it.path().filename().string() << "\t";
-        }
+            std::cout << p.stem() << ":" << std::endl;
+            for (auto &file : v) {
+                print_file(file);
+            }
+            std::cout << std::endl;
+
+        } else { std::cout << (is_directory(p.string()) ? "/" + p.string() : p.string()) << std::endl; }
     }
     exit(0);
 }
@@ -26,6 +41,7 @@ void list_dirs(std::vector<std::string> files) {
 int main(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
     basic_options.add_options()
+
             ("help,h", "print help message")
             (",l", "use a long listing format")
             (",r", "reverse order while sorting")
@@ -58,7 +74,7 @@ int main(int argc, char *argv[], char *envp[]) {
     opts.indicate = vm.count("F") != 0;
     opts.recursive = vm.count("R") != 0;
 
-    list_dirs(opts.files);
+    list_dirs(opts);
 
     exit(0);
 }
