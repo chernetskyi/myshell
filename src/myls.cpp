@@ -11,6 +11,18 @@ namespace po = boost::program_options;
 using namespace boost::filesystem;
 
 
+void list_dirs(std::vector<std::string> files) {
+    for (auto &file : files) {
+        path p(file);
+        std::vector<directory_entry> v;
+        if (is_directory(p)) {
+            copy(directory_iterator(p), directory_iterator(), back_inserter(v));
+            for (auto &it : v) std::cout << it.path().filename().string() << "\t";
+        }
+    }
+    exit(0);
+}
+
 int main(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
     basic_options.add_options()
@@ -46,13 +58,8 @@ int main(int argc, char *argv[], char *envp[]) {
     opts.indicate = vm.count("F") != 0;
     opts.recursive = vm.count("R") != 0;
 
-    path p(argc > 1 ? argv[1] : ".");
-    std::vector<directory_entry> v;
+    list_dirs(opts.files);
 
-    if (is_directory(p)) {
-        copy(directory_iterator(p), directory_iterator(), back_inserter(v));
-        for (auto &it : v) std::cout << it.path().filename().string() << " ";
-    }
     exit(0);
 }
 
