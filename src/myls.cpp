@@ -20,26 +20,25 @@ std::string trailing_slesh(std::string &file) {
 
 
 std::string f_flag(std::string filename, struct stat &stat_buff) {
-
+    std::string smb = "?";
     if (stat_buff.st_mode & S_IXUSR)
-        filename = "*" + filename;
+        smb = "*";
     else {
         switch (stat_buff.st_mode & S_IFMT) {
             case S_IFDIR:
-                filename = "/" + filename;
+                smb = "/";
                 break;
             case S_IFLNK:
-                filename = "@" + filename;
+                smb = "@";
                 break;
             case S_IFSOCK:
-                filename = "=" + filename;
+                smb = "=";
                 break;
             default:
-                filename = "?" + filename;
-
+                smb = "?";
         }
     }
-    return filename + "\t";
+    return smb + filename + "\t";
 }
 
 std::string l_flag(std::string &filename, struct stat &stat_buff) {
@@ -47,27 +46,23 @@ std::string l_flag(std::string &filename, struct stat &stat_buff) {
     char data_time[200];
     tm = localtime(&stat_buff.st_atime);
     strftime(data_time, sizeof(data_time), "%d.%m.%Y %H:%M:%S", tm);
-    return trailing_slesh(filename) + "\t"+ std::to_string(stat_buff.st_size)+ "\t"+ data_time+"\n";
+
+    return trailing_slesh(filename) + "\t" + std::to_string(stat_buff.st_size) + "\t" + data_time + "\n";
 }
 
 std::string format_file(directory_entry &file, options_struct &flags) {
-    FILE *fp;
     struct stat stat_buff;
-    if ((fp = fopen(file.path().c_str(), "rb")) == NULL) {
-        printf("Cannot open file.\n");
-        exit(1);
-    }
-    fstat(fileno(fp), &stat_buff);
 
+
+    stat(file.path().c_str(), &stat_buff);
     std::string filename = file.path().filename().string();
 
 
-    if (flags.indicate)
-        filename = f_flag(filename, stat_buff);
-    else if (flags.long_listing)
-        filename = l_flag(filename, stat_buff);
+    //working with flags
+    if (flags.indicate) filename = f_flag(filename, stat_buff);
+    else if (flags.long_listing) filename = l_flag(filename, stat_buff);
 
-    return filename ;
+    return filename;
 
 }
 
