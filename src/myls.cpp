@@ -11,10 +11,6 @@ namespace po = boost::program_options;
 using namespace boost::filesystem;
 
 
-
-
-
-
 int main(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
     basic_options.add_options()
@@ -50,17 +46,12 @@ int main(int argc, char *argv[], char *envp[]) {
     opts.indicate = vm.count("F") != 0;
     opts.recursive = vm.count("R") != 0;
 
-    path p(argc>1? argv[1] : ".");
+    path p(argc > 1 ? argv[1] : ".");
     std::vector<directory_entry> v;
 
-    if(is_directory(p))
-    {
+    if (is_directory(p)) {
         copy(directory_iterator(p), directory_iterator(), back_inserter(v));
-
-        for ( std::vector<directory_entry>::const_iterator it = v.begin(); it != v.end();  ++ it )
-        {
-            std::cout<< (*it).path().filename().string()<<" ";
-        }
+        for (auto &it : v) std::cout << it.path().filename().string() << " ";
     }
     exit(0);
 }
@@ -70,7 +61,11 @@ void parse_sorting_option(options_struct &options, std::vector<std::string> valu
     switch (val.size()) {
         case 1:
             switch (val[0]) {
-                case 'U': case 'S': case 't': case 'X': case 'N':
+                case 'U':
+                case 'S':
+                case 't':
+                case 'X':
+                case 'N':
                     options.sort_method = val[0];
                     options.directories_first = options.separate_special_files = false;
                     break;
@@ -83,7 +78,11 @@ void parse_sorting_option(options_struct &options, std::vector<std::string> valu
                 error(1, invalid_option_error + val + '\n' + try_help_message);
             for (char &c : val)
                 switch (c) {
-                    case 'U': case 'S': case 't': case 'X': case 'N':
+                    case 'U':
+                    case 'S':
+                    case 't':
+                    case 'X':
+                    case 'N':
                         options.sort_method = val[0];
                         break;
                     case 'D':
@@ -104,10 +103,15 @@ void parse_sorting_option(options_struct &options, std::vector<std::string> valu
             options.separate_special_files = options.directories_first = true;
             for (char &c : val)
                 switch (c) {
-                    case 'U': case 'S': case 't': case 'X': case 'N':
+                    case 'U':
+                    case 'S':
+                    case 't':
+                    case 'X':
+                    case 'N':
                         options.sort_method = val[0];
                         break;
-                    case 'D': case 's':
+                    case 'D':
+                    case 's':
                         break;
                     default:
                         error(1, invalid_option_error + val + '\n' + try_help_message);
