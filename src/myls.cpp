@@ -43,7 +43,11 @@ std::string f_flag(std::string filename, struct stat &stat_buff) {
 }
 
 std::string l_flag(std::string &filename, struct stat &stat_buff) {
-    return trailing_slesh(filename) + "\t"+ std::to_string(stat_buff.st_size)+ "\n";
+    struct tm *tm;
+    char data_time[200];
+    tm = localtime(&stat_buff.st_atime);
+    strftime(data_time, sizeof(data_time), "%d.%m.%Y %H:%M:%S", tm);
+    return trailing_slesh(filename) + "\t"+ std::to_string(stat_buff.st_size)+ "\t"+ data_time+"\n";
 }
 
 std::string format_file(directory_entry &file, options_struct &flags) {
@@ -76,7 +80,6 @@ void list_dirs(options_struct &opts) {
             std::cout << p.stem() << ":" << std::endl;
             for (auto &file :  files) std::cout << format_file(file, opts);
             std::cout << std::endl;
-
         } else { std::cout << (is_directory(p.string()) ? "/" + p.string() : p.string()) << std::endl; }
     }
     exit(0);
