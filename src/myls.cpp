@@ -4,6 +4,9 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <sys/stat.h>
+
 
 #include <sys/stat.h>
 
@@ -69,49 +72,91 @@ std::string trailing_slesh(std::string file) {
     return is_directory(file) ? "/" + file : file;
 }
 
-void print_file(directory_entry &file) {
-    std::string filename = file.path().filename().string();
-    std::cout << trailing_slesh(filename) << "\t";
 
+std::string f_flag(std::string &filename, struct stat &stat_buff) {
+    std::string smb = "?";
+    if (stat_buff.st_mode & S_IXUSR)
+        smb = "*";
+    else {
+        switch (stat_buff.st_mode & S_IFMT) {
+            case S_IFDIR:
+                smb = "/";
+                break;
+            case S_IFLNK:
+                smb = "@";
+                break;
+            case S_IFSOCK:
+                smb = "=";
+                break;
+            default:
+                smb = "?";
+        }
+    }
+    return smb + filename + "\t";
+}
+
+std::string l_flag(std::string &filename, struct stat &stat_buff) {
+    struct tm *tm;
+    char data_time[200];
+    tm = localtime(&stat_buff.st_atime);
+    strftime(data_time, sizeof(data_time), "%d.%m.%Y %H:%M:%S", tm);
+
+    return trailing_slesh(filename) + "\t" + std::to_string(stat_buff.st_size) + "\t" + data_time + "\n";
+}
+
+std::string format_file(directory_entry &file, options_struct &flags) {
+    struct stat stat_buff;
+
+    stat(file.path().c_str(), &stat_buff);
+    std::string filename = file.path().filename().string();
+
+    //working with flags
+    if (flags.indicate) filename = f_flag(filename, stat_buff);
+    else if (flags.long_listing) filename = l_flag(filename, stat_buff);
+    else filename += "\t";
+
+    return filename;
 }
 
 void list_dirs(options_struct &opts) {
     std::map<directory_entry, struct stat> stats;
 
     for (auto &directory : opts.files) {
-        path p(directory);
-        std::vector<directory_entry> v;
-        if (is_directory(p)) {
-            copy(directory_iterator(p), directory_iterator(), back_inserter(v));
-            for (auto &file:v) {
+        path directory_path(directory);
+        std::vector<directory_entry> files;
+        if (is_directory(directory_path)) {
+            if (opts.recursive)
+                copy(recursive_directory_iterator(directory_path), recursive_directory_iterator(),
+                     back_inserter(files));
+            else
+                copy(directory_iterator(directory_path), directory_iterator(), back_inserter(files));
+            for (auto &file:files) {
                 struct stat tmp{};
                 stat(const_cast<char *>(file.path().string().c_str()), &tmp);
                 stats[file] = tmp;
             }
-            std::sort(v.begin(), v.end(),
+            std::sort(files.begin(), files.end(),
                     [&opts, &stats] (const directory_entry& x, const directory_entry& y) {
                 return file_comparator(x, y, opts, stats);
             });
-            std::cout << p.stem() << ":" << std::endl;
-            for (auto &file : v) {
-                print_file(file);
-            }
+            std::cout << directory_path.stem() << ":" << std::endl;
+            for (auto &file :  files) std::cout << format_file(file, opts);
             std::cout << std::endl;
-
-        } else { std::cout << (is_directory(p.string()) ? "/" + p.string() : p.string()) << std::endl; }
+        } else std::cout << trailing_slesh(directory_path.string()) << std::endl;
     }
     exit(0);
 }
 
 int main(int argc, char *argv[], char *envp[]) {
     po::options_description basic_options("Options");
-    basic_options.add_options()
 
+    //TODO fix this s** only forks with --arg, must be -arg
+    basic_options.add_options()
             ("help,h", "print help message")
-            (",l", "use a long listing format")
-            (",r", "reverse order while sorting")
-            (",F", "append indicator to entries")
-            (",R", "list subdirectories recursively")
+            ("l", "use a long listing format")
+            ("r", "reverse order while sorting")
+            ("F", "append indicator to entries")
+            ("R", "list subdirectories recursively")
             ("sort", po::value<std::vector<std::string>>()->default_value(std::vector<std::string>{"N"}, "N"),
              "sort by parameter instead of name");
     po::options_description hidden_options("Hidden options");
@@ -138,6 +183,7 @@ int main(int argc, char *argv[], char *envp[]) {
     opts.reverse = vm.count("r") != 0;
     opts.indicate = vm.count("F") != 0;
     opts.recursive = vm.count("R") != 0;
+
 
     list_dirs(opts);
 
