@@ -14,12 +14,12 @@ namespace po = boost::program_options;
 using namespace boost::filesystem;
 
 
-std::string trailing_slesh(std::string &file) {
+std::string trailing_slesh(std::string file) {
     return is_directory(file) ? "/" + file : file;
 }
 
 
-std::string f_flag(std::string filename, struct stat &stat_buff) {
+std::string f_flag(std::string &filename, struct stat &stat_buff) {
     std::string smb = "?";
     if (stat_buff.st_mode & S_IXUSR)
         smb = "*";
@@ -53,33 +53,31 @@ std::string l_flag(std::string &filename, struct stat &stat_buff) {
 std::string format_file(directory_entry &file, options_struct &flags) {
     struct stat stat_buff;
 
-
     stat(file.path().c_str(), &stat_buff);
     std::string filename = file.path().filename().string();
-
 
     //working with flags
     if (flags.indicate) filename = f_flag(filename, stat_buff);
     else if (flags.long_listing) filename = l_flag(filename, stat_buff);
     else filename += "\t";
 
-
     return filename;
 }
 
 void list_dirs(options_struct &opts) {
     for (auto &directory : opts.files) {
-        path p(directory);
+        path directory_path(directory);
         std::vector<directory_entry> files;
-        if (is_directory(p)) {
+        if (is_directory(directory_path)) {
             if (opts.recursive)
-                copy(recursive_directory_iterator(p), recursive_directory_iterator(), back_inserter(files));
+                copy(recursive_directory_iterator(directory_path), recursive_directory_iterator(),
+                     back_inserter(files));
             else
-                copy(directory_iterator(p), directory_iterator(), back_inserter(files));
-            std::cout << p.stem() << ":" << std::endl;
+                copy(directory_iterator(directory_path), directory_iterator(), back_inserter(files));
+            std::cout << directory_path.stem() << ":" << std::endl;
             for (auto &file :  files) std::cout << format_file(file, opts);
             std::cout << std::endl;
-        } else { std::cout << (is_directory(p.string()) ? "/" + p.string() : p.string()) << std::endl; }
+        } else std::cout << trailing_slesh(directory_path.string()) << std::endl;
     }
     exit(0);
 }
