@@ -4,6 +4,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 
 #include "myls.h"
 
@@ -15,22 +16,21 @@ std::string trailing_slesh(std::string file) {
     return is_directory(file) ? "/" + file : file;
 }
 
-void print_file(directory_entry &file) {
+std::string format_file(directory_entry &file, options_struct &flags) {
     std::string filename = file.path().filename().string();
-    std::cout << trailing_slesh(filename) << "\t";
+    std::cout<<"filename extension "<<extension(file)<<" xt"<<std::endl;
+    return trailing_slesh(filename) + "\t";
 
 }
 
 void list_dirs(options_struct &opts) {
     for (auto &directory : opts.files) {
         path p(directory);
-        std::vector<directory_entry> v;
+        std::vector<directory_entry> files;
         if (is_directory(p)) {
-            copy(directory_iterator(p), directory_iterator(), back_inserter(v));
+            copy(directory_iterator(p), directory_iterator(), back_inserter(files));
             std::cout << p.stem() << ":" << std::endl;
-            for (auto &file : v) {
-                print_file(file);
-            }
+            for (auto &file :  files) std::cout << format_file(file, opts);
             std::cout << std::endl;
 
         } else { std::cout << (is_directory(p.string()) ? "/" + p.string() : p.string()) << std::endl; }
