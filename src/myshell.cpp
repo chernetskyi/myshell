@@ -73,7 +73,11 @@ void MyShell::fork_exec(char *proc, char **args) {
         std::cerr << could_not_create_process_error << proc << std::endl;
         erno = 1;
     } else if (!pid) {
+#ifdef _GNU_SOURCE
+        int res = execvpe(proc, args, env.data());
+#else
         int res = execve(proc, args, env.data());
+#endif
         if (res == -1) {
             std::cerr << command_not_found_error << proc << std::endl;
             erno = 1;
