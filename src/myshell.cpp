@@ -68,7 +68,7 @@ void MyShell::process(std::string &input, std::vector<char *> &args) {
 }
 
 void MyShell::fork_exec(char *proc, char **args) {
-    int pid = fork();
+    pid_t pid = fork();
     if (pid == -1) {
         std::cerr << could_not_create_process_error << proc << std::endl;
         erno = 1;
