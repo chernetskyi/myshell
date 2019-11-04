@@ -20,7 +20,6 @@ constexpr const char mpwd_too_many_args_error_message[] = "mpwd: too many argume
 int mcd(int argc, char *argv[], char *envp[]);
 constexpr const char mcd_help_message[] = "mcd: mcd <dir>\n"
                                           "    Change the working directory.";
-constexpr const char mcd_not_enough_args_error_message[] = "mcd: not enough arguments";
 constexpr const char mcd_no_such_dir_error_message[] = "mcd: no such file or directory: ";
 constexpr const char mcd_too_many_args_error_message[] = "mcd: too many arguments";
 

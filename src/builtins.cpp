@@ -47,7 +47,7 @@ int mpwd(int argc, char *argv[], char *envp[]) {
 int mcd(int argc, char *argv[], char *envp[]) {
     switch (argc) {
         case 1:
-            std::cerr << mcd_not_enough_args_error_message << std::endl;
+            boost::filesystem::current_path(getenv("HOME"));
             return 1;
         case 2:
             if (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h") {
