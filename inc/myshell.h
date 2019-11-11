@@ -17,7 +17,7 @@ private:
 
     void execute(std::string &input);
 
-    void process(std::string &input, std::vector<char *> &args);
+    void process(std::string &input, std::vector<std::string> &args);
 
     void fork_exec(char *proc, char **margv);
 

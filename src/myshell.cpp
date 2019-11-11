@@ -26,7 +26,7 @@ MyShell::MyShell(char *envp[]) : erno(0) {
 }
 
 void MyShell::execute(std::string &input) {
-    std::vector<char *> args;
+    std::vector<std::string> args;
     process(input, args);
     if (std::string(args[0]).find('=') != std::string::npos)
         if (args.size() == 1) {
@@ -37,34 +37,42 @@ void MyShell::execute(std::string &input) {
             std::cerr << command_not_found_error << args[1] << std::endl;
             erno = 1;
         }
-    else if (builtins_map.find(args[0]) != builtins_map.end()) {
-        builtin func = builtins_map[args[0]];
-        erno = func(args.size(), args.data(), env.data());
-    } else
-        fork_exec(args[0], args.data());
+    else {
+        std::vector<char *> cargs;
+        for (auto &arg : args)
+            cargs.push_back(const_cast<char *>(arg.c_str()));
+        if (builtins_map.find(args[0]) != builtins_map.end()) {
+            builtin func = builtins_map[args[0]];
+            erno = func(args.size(), cargs.data(), env.data());
+        } else
+            fork_exec(cargs[0], cargs.data());
+    }
 }
 
-void MyShell::process(std::string &input, std::vector<char *> &args) {
+void MyShell::process(std::string &input, std::vector<std::string> &args) {
     boost::trim(input);
-    size_t n = std::count(input.begin(), input.end(), '"');
-    if ((n > 0) && (n % 2 == 0)) {
-        std::vector<std::string> splits;
-        boost::split(splits, input, boost::is_any_of("\""));
-        for (size_t i = 0; i < splits.size(); ++i)
-            if (i % 2 == 0) {
-                boost::trim(splits[i]);
-                put_args(splits[i], args);
-            } else
-                args.push_back(const_cast<char *>(splits[i].c_str()));
-    } else {
-        if (n > 0) {
-            std::cerr << quotes_ignored_error << std::endl;
-            boost::erase_all(input, "\"");
-        }
-        put_args(input, args);
+    int begin = -1;
+    bool double_quotes = false;
+    for (size_t i = 0; i < input.size(); ++i) {
+        if (input[i] == '"') {
+            if (double_quotes) {
+                args.push_back(input.substr(begin, i - begin));
+                begin = -1;
+            } else {
+                if (i != input.size() - 1)
+                    begin = i + 1;
+                double_quotes = true;
+            }
+        } else if (input[i] == ' ') {
+            if ((begin != -1) && !double_quotes) {
+                args.push_back(input.substr(begin, i - begin));
+                begin = -1;
+            }
+        } else if (begin == -1)
+            begin = i;
     }
-    for (auto &arg : args)
-        std::cout << arg << std::endl;
+    if (begin != -1)
+        args.push_back(input.substr(begin, input.size() - begin));
 }
 
 void MyShell::fork_exec(char *proc, char **args) {
@@ -111,22 +119,12 @@ void MyShell::start() {
     while ((input_buff = readline(prompt().c_str())) != nullptr) {
         if (strlen(input_buff) == 0)
             continue;
-        else if ((strlen(input_buff) > 0) && !isspace(input_buff[0]))
+        else if (!isspace(input_buff[0]))
             add_history(input_buff);
         std::string user_input = input_buff;
         free(input_buff);
         execute(user_input);
     }
-}
-
-void put_args(const std::string &input, std::vector<char *> &args) {
-    std::string filtered_input;
-    std::unique_copy(input.begin(), input.end(), std::back_insert_iterator<std::string>(filtered_input),
-                     [](char a, char b) { return isspace(a) && isspace(b); });
-    std::vector<std::string> splits;
-    boost::split(splits, filtered_input, boost::is_space());
-    for (auto &split : splits)
-        args.push_back(const_cast<char *>(split.c_str()));
 }
 
 int main(int argc, char *argv[], char *envp[]) {
