@@ -26,7 +26,9 @@ MyShell::MyShell(char *envp[]) : erno(0) {
 }
 
 void MyShell::execute(std::string &input) {
+
     std::vector<std::string> args;
+
     process(input, args);
     if (std::string(args[0]).find('=') != std::string::npos)
         if (args.size() == 1) {
@@ -126,7 +128,15 @@ void MyShell::start() {
         else if (!isspace(input_buff[0]))
             add_history(input_buff);
         std::string user_input = input_buff;
-        free(input_buff);
+        free(input_buff)
+
+
+        std::vector<std::string> pipes;
+        boost::split(pipes, user_input, boost::is_any_of("|"));
+        for (const auto &item : pipes) {
+            std::cout<<item<<"ITEM"<<std::endl;
+
+        }
         execute(user_input);
     }
 }
