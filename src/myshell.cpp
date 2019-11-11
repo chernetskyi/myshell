@@ -1,10 +1,7 @@
 #include <cctype>
-#include <iostream>
-#include <map>
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <sys/wait.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -13,6 +10,7 @@
 #include <readline/history.h>
 
 #include "builtins.h"
+#include "command.h"
 #include "myshell.h"
 
 MyShell::MyShell(char *envp[]) : erno(0) {
@@ -23,32 +21,6 @@ MyShell::MyShell(char *envp[]) : erno(0) {
     }
     env.push_back(nullptr);
     initialize_builtins();
-}
-
-void MyShell::execute(std::string &input) {
-    std::vector<std::string> args;
-    process(input, args);
-    if (std::string(args[0]).find('=') != std::string::npos)
-        if (args.size() == 1) {
-            std::vector<std::string> splits;
-            boost::split(splits, std::string(args[0]), boost::is_any_of("="));
-            setenv(splits[0].c_str(), splits[1].c_str(), 1);
-        } else {
-            std::cerr << command_not_found_error << args[1] << std::endl;
-            erno = 1;
-        }
-    else {
-        std::vector<char *> cargs;
-        for (auto &arg : args)
-            cargs.push_back(const_cast<char *>(arg.c_str()));
-        if (builtins_map.find(args[0]) != builtins_map.end()) {
-            builtin func = builtins_map[args[0]];
-            erno = func(args.size(), cargs.data(), env.data());
-        } else {
-            cargs.push_back(nullptr);
-            fork_exec(cargs[0], cargs.data());
-        }
-    }
 }
 
 void MyShell::process(std::string &input, std::vector<std::string> &args) {
@@ -77,27 +49,6 @@ void MyShell::process(std::string &input, std::vector<std::string> &args) {
         args.push_back(input.substr(begin, input.size() - begin));
 }
 
-void MyShell::fork_exec(char *proc, char **args) {
-    pid_t pid = fork();
-    if (pid == -1) {
-        std::cerr << could_not_create_process_error << proc << std::endl;
-        erno = 1;
-    } else if (!pid) {
-#ifdef _GNU_SOURCE
-        int res = execvpe(proc, args, env.data());
-#else
-
-        int res = execvp(proc, args);
-#endif
-        if (res == -1) {
-
-            std::cerr << command_not_found_error << proc << std::endl;
-            erno = 1;
-        }
-    } else
-        waitpid(pid, &erno, 0);
-}
-
 std::string MyShell::prompt() {
     std::string prompt(getenv("PS1"));
     size_t start_pos = 0;
@@ -115,6 +66,8 @@ void MyShell::initialize_builtins() {
     builtins_map["mpwd"] = &mpwd;
     builtins_map["mcd"] = &mcd;
     builtins_map["mecho"] = &mecho;
+    builtins_map["mexport"] = &mexport;
+    builtins_map["."] = &dotbuiltin;
 }
 
 void MyShell::start() {
@@ -127,7 +80,14 @@ void MyShell::start() {
             add_history(input_buff);
         std::string user_input = input_buff;
         free(input_buff);
-        execute(user_input);
+        std::vector<std::string> args;
+        process(user_input, args);
+        std::vector<char *> cargs;
+        for (auto &arg : args)
+            cargs.push_back(const_cast<char *>(arg.c_str()));
+        cargs.push_back(nullptr);
+        Command command{0, 1, 2, false, static_cast<int>(cargs.size() - 1), cargs.data(), env.data(), builtins_map};
+        erno = command.execute();
     }
 }
 
