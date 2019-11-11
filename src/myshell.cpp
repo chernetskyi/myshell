@@ -44,8 +44,10 @@ void MyShell::execute(std::string &input) {
         if (builtins_map.find(args[0]) != builtins_map.end()) {
             builtin func = builtins_map[args[0]];
             erno = func(args.size(), cargs.data(), env.data());
-        } else
+        } else {
+            cargs.push_back(nullptr);
             fork_exec(cargs[0], cargs.data());
+        }
     }
 }
 
@@ -84,9 +86,11 @@ void MyShell::fork_exec(char *proc, char **args) {
 #ifdef _GNU_SOURCE
         int res = execvpe(proc, args, env.data());
 #else
-        int res = execve(proc, args, env.data());
+
+        int res = execvp(proc, args);
 #endif
         if (res == -1) {
+
             std::cerr << command_not_found_error << proc << std::endl;
             erno = 1;
         }
