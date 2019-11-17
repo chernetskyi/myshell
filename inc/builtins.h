@@ -31,4 +31,8 @@ constexpr const char merrno_too_many_args_error_message[] = "merrno: too many ar
 
 int mecho(int argc, char *argv[], char *envp[]);
 
+int mexport(int argc, char *argv[], char *envp[]);
+
+int dotbuiltin(int argc, char *argv[], char *envp[]);
+
 #endif //MYSHELL_BUILTINS_H

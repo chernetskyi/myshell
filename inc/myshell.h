@@ -15,11 +15,7 @@ private:
 
     void initialize_builtins();
 
-    void execute(std::string &input);
-
     void process(std::string &input, std::vector<std::string> &args);
-
-    void fork_exec(char *proc, char **margv);
 
     std::string prompt();
 
@@ -28,11 +24,5 @@ public:
 
     void start();
 };
-
-constexpr const char command_not_found_error[] = "myshell: command not found: ";
-constexpr const char could_not_create_process_error[] = "myshell: could not create process: ";
-constexpr const char quotes_ignored_error[] = "myshell: quotes ignored because of the odd amount";
-
-void put_args(const std::string &input, std::vector<char *> &args);
 
 #endif //MYSHELL_MYSHELL_H

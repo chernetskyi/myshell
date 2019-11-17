@@ -1,18 +1,16 @@
 #include <cctype>
 #include <iostream>
-#include <map>
 #include <string>
 #include <unistd.h>
 #include <vector>
-#include <sys/wait.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 #include <readline/readline.h>
 #include <readline/history.h>
-
 #include "builtins.h"
+#include "command.h"
 #include "myshell.h"
 
 MyShell::MyShell(char *envp[]) : erno(0) {
@@ -23,34 +21,6 @@ MyShell::MyShell(char *envp[]) : erno(0) {
     }
     env.push_back(nullptr);
     initialize_builtins();
-}
-
-void MyShell::execute(std::string &input) {
-
-    std::vector<std::string> args;
-
-    process(input, args);
-    if (std::string(args[0]).find('=') != std::string::npos)
-        if (args.size() == 1) {
-            std::vector<std::string> splits;
-            boost::split(splits, std::string(args[0]), boost::is_any_of("="));
-            setenv(splits[0].c_str(), splits[1].c_str(), 1);
-        } else {
-            std::cerr << command_not_found_error << args[1] << std::endl;
-            erno = 1;
-        }
-    else {
-        std::vector<char *> cargs;
-        for (auto &arg : args)
-            cargs.push_back(const_cast<char *>(arg.c_str()));
-        if (builtins_map.find(args[0]) != builtins_map.end()) {
-            builtin func = builtins_map[args[0]];
-            erno = func(args.size(), cargs.data(), env.data());
-        } else {
-            cargs.push_back(nullptr);
-            fork_exec(cargs[0], cargs.data());
-        }
-    }
 }
 
 void MyShell::process(std::string &input, std::vector<std::string> &args) {
@@ -79,27 +49,6 @@ void MyShell::process(std::string &input, std::vector<std::string> &args) {
         args.push_back(input.substr(begin, input.size() - begin));
 }
 
-void MyShell::fork_exec(char *proc, char **args) {
-    pid_t pid = fork();
-    if (pid == -1) {
-        std::cerr << could_not_create_process_error << proc << std::endl;
-        erno = 1;
-    } else if (!pid) {
-#ifdef _GNU_SOURCE
-        int res = execvpe(proc, args, env.data());
-#else
-
-        int res = execvp(proc, args);
-#endif
-        if (res == -1) {
-
-            std::cerr << command_not_found_error << proc << std::endl;
-            erno = 1;
-        }
-    } else
-        waitpid(pid, &erno, 0);
-}
-
 std::string MyShell::prompt() {
     std::string prompt(getenv("PS1"));
     size_t start_pos = 0;
@@ -117,6 +66,8 @@ void MyShell::initialize_builtins() {
     builtins_map["mpwd"] = &mpwd;
     builtins_map["mcd"] = &mcd;
     builtins_map["mecho"] = &mecho;
+    builtins_map["mexport"] = &mexport;
+    builtins_map["."] = &dotbuiltin;
 }
 
 void MyShell::start() {
@@ -128,17 +79,76 @@ void MyShell::start() {
         else if (!isspace(input_buff[0]))
             add_history(input_buff);
         std::string user_input = input_buff;
-        free(input_buff)
 
 
-        std::vector<std::string> pipes;
-        boost::split(pipes, user_input, boost::is_any_of("|"));
-        for (const auto &item : pipes) {
-            std::cout<<item<<"ITEM"<<std::endl;
+        std::vector<std::string> pipe_buss;
+        boost::split(pipe_buss, user_input, boost::is_any_of("|"));
+
+        std::vector<Command> commands;
+        commands.reserve(pipe_buss.size());
+        int in = 0;
+        int j = 0;
+        int pid;
+        for (auto &cmnd: pipe_buss) {
+            int pipe_fd[2];
+            pipe(pipe_fd);
+
+            if (j == pipe_buss.size() - 1) {
+                pipe_fd[1] = 1;
+            }
+
+            std::vector<std::string> args;
+            process(cmnd, args);
+
+
+            std::vector<char *> cargs;
+            cargs.reserve(args.size());
+            for (auto &arg : args) {
+                const size_t str_size = arg.size();
+                char *buffer = new char[str_size + 1];   //we need extra char for NUL
+                memcpy(buffer, arg.c_str(), str_size + 1);
+                cargs.push_back(buffer);
+            }
+            cargs.push_back(nullptr);
+            commands.emplace_back(in, pipe_fd[1], 2, false, static_cast<int>(cargs.size() - 1), cargs, env.data(),
+                                  builtins_map);
+            Command item = commands[j];
+            pid = item.execute();
+
+            in = pipe_fd[0];
+            j++;
 
         }
-        execute(user_input);
+//        int pid;
+//        for (auto &item: commands) {
+//            std::cout << item.in_fd << " " << item.out_fd << " " << "argv" << std::endl;
+//            pid = item.execute();
+//        }
+        waitpid(pid, nullptr, 0);
+//        free(input_buff);
+//        } else {
+//            close(pipe_fd[0]);
+//            close(1);
+//            dup(pipe_fd[1]);
+//            close(pipe_fd[1]);
+//
+//
+//            std::vector<std::string> args;
+//            process(pipe_buss[0], args);
+//
+//
+//            std::vector<char *> cargs;
+//            cargs.reserve(args.size());
+//            for (auto &arg : args)
+//                cargs.push_back(const_cast<char *>(arg.c_str()));
+//            cargs.push_back(nullptr);
+//            Command command{pipe_fd[0], 1, 2, false, static_cast<int>(cargs.size() - 1), cargs.data(), env.data(),builtins_map};
+//            erno = command.execute();
+//            close(1);
+//    execute(user_input);
+
     }
+
 }
 
 int main(int argc, char *argv[], char *envp[]) {

@@ -90,3 +90,11 @@ int mecho(int argc, char *argv[], char *envp[]) {
     std::cout << std::endl;
     return 0;
 }
+
+int mexport(int argc, char *argv[], char *envp[]) {
+    return 0;
+}
+
+int dotbuiltin(int argc, char *argv[], char *envp[]) {
+    return 0;
+}
