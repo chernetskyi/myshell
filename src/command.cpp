@@ -43,9 +43,7 @@ int Command::fork_exec() {
         std::cerr << could_not_create_process_error << argv[0] << std::endl;
         return 1;
     } else if (!pid) {
-#ifdef _GNU_SOURCE
-        int res = execvpe(argv[0], argv, envp);
-#else
+
         if (out_fd != 0) {
             dup2(in_fd, 0);
             close(in_fd);
@@ -54,8 +52,10 @@ int Command::fork_exec() {
             dup2(out_fd, 1);
             close(out_fd);
         }
+#ifdef _GNU_SOURCE
+        int res = execvpe(argv[0], argv, envp);
+#else
         int res = execvp(argv[0], const_cast<char **>(argv.data()));
-
 #endif
         if (res == -1) {
             std::cerr << command_not_found_error << argv[0] << std::endl;

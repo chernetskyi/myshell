@@ -24,7 +24,6 @@ MyShell::MyShell(char *envp[]) : erno(0) {
 }
 
 
-
 std::vector<const char *> MyShell::process(std::string &input) {
     std::vector<const char *> args;
     char *buffer;
@@ -40,7 +39,7 @@ std::vector<const char *> MyShell::process(std::string &input) {
                 //we need extra char for NUL
                 sub = input.substr(begin, i - begin);
                 buffer = new char[sub.size()];
-                memcpy(buffer, sub.c_str(), sub.size()+ 1);
+                memcpy(buffer, sub.c_str(), sub.size() + 1);
                 args.push_back(buffer);
                 begin = -1;
             } else {
@@ -110,7 +109,7 @@ void MyShell::start() {
 
         int in = 0;
         int j = 0;
-        int pid=0;
+        int pid = 0;
         for (auto &cmnd: pipe_buss) {
             int pipe_fd[2];
             pipe(pipe_fd);
@@ -122,7 +121,6 @@ void MyShell::start() {
             pid = item.execute();
             in = pipe_fd[0];
         }
-
         waitpid(pid, nullptr, 0);
 
 
