@@ -10,7 +10,7 @@
 #include "builtins.h"
 #include "command.h"
 
-Command::Command(int in_fd, int out_fd, int err_fd, bool background, int argc, std::vector<char *> &argv, char **envp,
+Command::Command(int in_fd, int out_fd, int err_fd, bool background, int argc, std::vector<const char *> &argv, char **envp,
                  std::map<std::string, builtin> builtins_map)
         : in_fd(in_fd), out_fd(out_fd), err_fd(err_fd), background(background), argc(argc), argv(argv), envp(envp),
           builtins_map(std::move(builtins_map)) {}
@@ -47,29 +47,19 @@ int Command::fork_exec() {
         int res = execvpe(argv[0], argv, envp);
 #else
 
-//inf fd = 0
-//out fd = 1
 
         if (out_fd != 0) {
             dup2(in_fd, 0);
             close(in_fd);
         }
 
-//
         if (out_fd != 1) {
             dup2(out_fd, 1);
             close(out_fd);
         }
-//        dup(1);
-//        close(out_fd);
 
-
-        std::cout << "before start\n" << std::endl;
         int res = execvp(argv.data()[0], argv.data());
 
-
-//        std::cout <<"close write\n"<<std::endl;
-//        close(1);
 
 #endif
         if (res == -1) {

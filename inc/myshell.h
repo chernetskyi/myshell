@@ -15,7 +15,7 @@ private:
 
     void initialize_builtins();
 
-    void process(std::string &input, std::vector<std::string> &args);
+    std::vector<const char * > process(std::string &input);
 
     std::string prompt();
 
