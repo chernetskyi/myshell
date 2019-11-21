@@ -27,7 +27,9 @@ MyShell::MyShell(char *envp[]) : erno(0) {
 
 std::vector<const char *> MyShell::process(std::string &input) {
     std::vector<const char *> args;
+    char *buffer;
     boost::trim(input);
+    std::string sub;
     int begin = -1;
     bool double_quotes = false;
 
@@ -36,9 +38,9 @@ std::vector<const char *> MyShell::process(std::string &input) {
         if (input[i] == '"') {
             if (double_quotes) {
                 //we need extra char for NUL
-                std::string sub = input.substr(begin, i - begin);
-                char *buffer = new char[sub.size()];
-                memcpy(buffer, sub.c_str(), 2 + 1);
+                sub = input.substr(begin, i - begin);
+                buffer = new char[sub.size()];
+                memcpy(buffer, sub.c_str(), sub.size()+ 1);
                 args.push_back(buffer);
                 begin = -1;
             } else {
@@ -48,9 +50,11 @@ std::vector<const char *> MyShell::process(std::string &input) {
             }
         } else if (input[i] == ' ') {
             if ((begin != -1) && !double_quotes) {
-                std::string sub = input.substr(begin, i - begin);
-                char *buffer = new char[sub.size()];
-                memcpy(buffer, sub.c_str(), 2 + 1);
+
+
+                sub = input.substr(begin, i - begin);
+                buffer = new char[sub.size()];
+                memcpy(buffer, sub.c_str(), sub.size() + 1);
                 args.push_back(buffer);
                 begin = -1;
             }
@@ -58,11 +62,13 @@ std::vector<const char *> MyShell::process(std::string &input) {
             begin = i;
         }
 
-
     }
-//    if (begin != -1) {
-//        args.push_back(input.substr(begin, input.size() - begin));
-//    }
+    if (begin != -1) {
+        sub = input.substr(begin, input.size() - begin);
+        buffer = new char[sub.size()];
+        memcpy(buffer, sub.c_str(), sub.size() + 1);
+        args.push_back(buffer);
+    }
     args.push_back(nullptr);
     return args;
 }
@@ -102,29 +108,19 @@ void MyShell::start() {
         std::vector<std::string> pipe_buss;
         boost::split(pipe_buss, user_input, boost::is_any_of("|"));
 
-        std::vector<Command> commands;
-        commands.reserve(pipe_buss.size());
         int in = 0;
         int j = 0;
-        int pid;
+        int pid=0;
         for (auto &cmnd: pipe_buss) {
             int pipe_fd[2];
             pipe(pipe_fd);
-
-            if (j == pipe_buss.size() - 1) {
+            if (j++ == pipe_buss.size() - 1)
                 pipe_fd[1] = 1;
-            }
-
             auto args = process(cmnd);
-
-            commands.emplace_back(in, pipe_fd[1], 2, false, static_cast<int>(args.size() - 1), args, env.data(),
-                                  builtins_map);
-            Command item = commands[j];
+            Command item = Command(in, pipe_fd[1], 2, false, static_cast<int>(args.size() - 1), args, env.data(),
+                                   builtins_map);
             pid = item.execute();
-
             in = pipe_fd[0];
-            j++;
-
         }
 
         waitpid(pid, nullptr, 0);
