@@ -1,7 +1,6 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <sys/wait.h>
 #include <utility>
 #include <vector>
 
@@ -11,8 +10,7 @@
 #include "command.h"
 
 Command::Command(int in_fd, int out_fd, int err_fd, bool background, int argc, std::vector<const char *> &argv,
-                 char **envp,
-                 std::map<std::string, builtin> builtins_map)
+                 char **envp, std::map<std::string, builtin> builtins_map)
         : in_fd(in_fd), out_fd(out_fd), err_fd(err_fd), background(background), argc(argc), argv(argv), envp(envp),
           builtins_map(std::move(builtins_map)) {}
 
@@ -43,7 +41,6 @@ int Command::fork_exec() {
         std::cerr << could_not_create_process_error << argv[0] << std::endl;
         return 1;
     } else if (!pid) {
-
         if (out_fd != 0) {
             dup2(in_fd, 0);
             close(in_fd);
@@ -53,14 +50,12 @@ int Command::fork_exec() {
             close(out_fd);
         }
 #ifdef _GNU_SOURCE
-        int res = execvpe(argv[0], argv, envp);
+        int res = execvpe(argv[0], const_cast<char **>(argv.data()), envp);
 #else
         int res = execvp(argv[0], const_cast<char **>(argv.data()));
 #endif
-        if (res == -1) {
-            std::cerr << command_not_found_error << argv[0] << std::endl;
-            return 1;
-        }
+        std::cerr << command_not_found_error << argv[0] << std::endl;
+        return 1;
     } else {
         if (out_fd != 1)
             close(out_fd);

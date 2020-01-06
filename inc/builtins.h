@@ -1,9 +1,7 @@
 #ifndef MYSHELL_BUILTINS_H
 #define MYSHELL_BUILTINS_H
 
-#include <functional>
-
-typedef std::function<int(int, char **, char **)> builtin;
+#include "myshell.h"
 
 int mexit(int argc, char *argv[], char *envp[]);
 constexpr const char mexit_help_message[] = "mexit: mexit [n]\n"
@@ -31,8 +29,10 @@ constexpr const char merrno_too_many_args_error_message[] = "merrno: too many ar
 
 int mecho(int argc, char *argv[], char *envp[]);
 
-int mexport(int argc, char *argv[], char *envp[]);
+int mexport(int argc, char *argv[], char *envp[], std::vector<char *> &env);
+constexpr const char mexport_wrong_args_error_message[] = "mexport: wrong number of arguments";
 
-int dotbuiltin(int argc, char *argv[], char *envp[]);
+int dotbuiltin(int argc, char *argv[], char *envp[], MyShell *shell);
+constexpr const char dotbuiltin_wrong_args_error_message[] = ".: wrong number of arguments";
 
 #endif //MYSHELL_BUILTINS_H

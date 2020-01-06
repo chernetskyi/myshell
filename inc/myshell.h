@@ -1,9 +1,12 @@
 #ifndef MYSHELL_MYSHELL_H
 #define MYSHELL_MYSHELL_H
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
+
+typedef std::function<int(int, char **, char **)> builtin;
 
 #include "builtins.h"
 
@@ -15,7 +18,7 @@ private:
 
     void initialize_builtins();
 
-    std::vector<const char * > process(std::string &input);
+    std::vector<const char * > parse(std::string &input);
 
     std::string prompt();
 
@@ -23,6 +26,10 @@ public:
     explicit MyShell(char *envp[]);
 
     void start();
+
+    int run_script(char *scriptname);
 };
+
+constexpr const char pipe_error_message[] = "myshell: can not create pipe";
 
 #endif //MYSHELL_MYSHELL_H
