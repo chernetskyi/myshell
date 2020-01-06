@@ -21,7 +21,7 @@ private:
     std::vector<const char * > parse(std::string &input);
 
     std::string prompt();
-
+    int process_commands(std::vector<std::string> pipe_buss);
 public:
     explicit MyShell(char *envp[]);
 
