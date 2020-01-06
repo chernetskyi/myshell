@@ -22,5 +22,8 @@ target_link_libraries(mymkdir ${Boost_LIBRARIES})
 add_executable(myrm src/myrm.cpp)
 target_link_libraries(myrm ${Boost_LIBRARIES})
 
+add_executable(mymv src/mymv.cpp)
+target_link_libraries(mymv ${Boost_LIBRARIES})
+
 add_executable(myshell src/myshell.cpp inc/myshell.h src/builtins.cpp inc/builtins.h src/command.cpp inc/command.h)
 target_link_libraries(myshell readline ${Boost_LIBRARIES})
