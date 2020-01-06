@@ -137,31 +137,36 @@ void MyShell::start() {
         std::vector<std::string> pipe_buss;
         boost::split(pipe_buss, user_input, boost::is_any_of("|"));
 
-        int in = STDIN_FILENO;
-        int j = 0;
-        int pid = 0;
-        for (auto &cmnd: pipe_buss) {
-            int pipe_fd[2];
-            if (pipe(pipe_fd) != 0) {
-                std::cerr << pipe_error_message << std::endl;
-                erno = 1;
-                break;
-            }
-            if (j++ == pipe_buss.size() - 1)
-                pipe_fd[1] = STDOUT_FILENO;
-            auto args = parse(cmnd);
-            bool bckgrnd = false;
-            if (strcmp(args[args.size() - 2], "&") == 0) {
-                args.erase(args.end() - 2);
-                bckgrnd = true;
-            }
-            Command item = Command(in, pipe_fd[1], STDERR_FILENO, bckgrnd, static_cast<int>(args.size() - 1),
-                                   args, env.data(), builtins_map);
-            pid = item.execute();
-            in = pipe_fd[0];
-        }
+        int pid = process_commands(pipe_buss);
+
         waitpid(pid, nullptr, 0);
     }
+}
+
+int MyShell::process_commands(std::vector<std::string> pipe_buss) {
+    int in = STDIN_FILENO;
+    int j = 0;
+    int pid = 0;
+    for (auto &cmnd: pipe_buss) {
+        int pipe_fd[2];
+        if (pipe(pipe_fd) != 0) {
+            std::cerr << pipe_error_message << std::endl;
+            erno = 1;
+            break;
+        }
+        if (j++ == pipe_buss.size() - 1)
+            pipe_fd[1] = STDOUT_FILENO;
+        auto args = parse(cmnd);
+        bool bckgrnd = false;
+        if (strcmp(args[args.size() - 2], "&") == 0) {
+            args.erase(args.end() - 2);
+            bckgrnd = true;
+        }
+        Command item = Command(in, pipe_fd[1], STDERR_FILENO, bckgrnd, static_cast<int>(args.size() - 1), args, env.data(), builtins_map);
+        pid = item.execute();
+        in = pipe_fd[0];
+    }
+    return pid;
 }
 
 int MyShell::run_script(char *scriptname) {
